@@ -7,6 +7,7 @@
 import RPi.GPIO as GPIO
 import serial
 import struct
+import time
 
 ###############################################################################
 # base command class
@@ -29,7 +30,7 @@ class Command(object):
     FOOTER_LENGTH = 4
     CHECK_LENGTH = 1
     COMMAND = b'\x00'
-    RESPONSE_LENGTH = 0
+    RESPONSE_BYTES = 0
 
     def __init__(self, command=None, data=None):
         self.command = command or self.COMMAND
@@ -74,7 +75,8 @@ class Command(object):
         '''
         Encodes the packet and attaches the checksum.
         '''
-        return self._encode_packet() + self.calculate_checksum(packet)
+        packet = self._encode_packet()
+        return packet + self.calculate_checksum(packet)
 
     def __repr__(self):
         '''
@@ -98,7 +100,7 @@ class Handshake(Command):
     > Handshake command. If the module is ready, it will return an "OK".
 
     '''
-    RESPONSE_LENGTH = 0
+    RESPONSE_BYTES = 0
 
 class SetBaudrate(Command):
     '''
@@ -112,6 +114,7 @@ class SetBaudrate(Command):
     period of time to change its Baud rate.
     '''
     COMMAND = b'\x01'
+    RESPONSE_BYTES = 2
 
     def __init__(self, baud):
         super().__init__(SetBaudrate.COMMAND, struct.pack('>L', baud))
@@ -125,7 +128,7 @@ class ReadBaudrate(Command):
 
     '''
     COMMAND = b'\x02'
-    RESPONSE_LENGTH = 6
+    RESPONSE_BYTES = 6
 
 
 class ReadStorageMode(Command):
@@ -174,6 +177,7 @@ class RefreshAndUpdate(Command):
     Refresh and update the display at once.
     '''
     COMMAND = b'\x0a'
+    RESPONSE_BYTES = 2
 
 
 class CurrentDisplayRotation(Command):
@@ -198,7 +202,7 @@ class SetCurrentDisplayRotation(Command):
     0x01 or 0x02: 180° rotation (depending on Firmware)
     '''
     COMMAND = b'\x0d'
-    RESPONSE_LENGTH = 2
+    RESPONSE_BYTES = 2
 
     NORMAL = b'\x00'
     FLIP = b'\x01'
@@ -237,7 +241,7 @@ class SetPallet(Command):
     the background color is used to clear the screen.
     '''
     COMMAND = b'\x10'
-    RESPONSE_LENGTH = 2
+    RESPONSE_BYTES = 2
 
     BLACK = b'\x00'
     DARK_GRAY = b'\x01'
@@ -265,6 +269,7 @@ class SetFontSize(Command):
     THIRTYTWO = b'\x01'
     FOURTYEIGHT = b'\x02'
     SIXTYFOUR = b'\x03'
+    RESPONSE_BYTES = 2
     def __init__(self, command, size=THIRTYTWO):
         super().__init__(command, [size])
 
@@ -275,6 +280,7 @@ class SetEnFontSize(SetFontSize):
     Set the English font size (0x1E or 0x1F, may differ depending on version).
     '''
     COMMAND = b'\x1e'
+    RESPONSE_BYTES = 2
     def __init__(self, size=SetFontSize.THIRTYTWO):
         super().__init__(SetEnFontSize.COMMAND, size)
 
@@ -285,6 +291,7 @@ class SetZhFontSize(SetFontSize):
     Set the Chinese font size (0x1F).
     '''
     COMMAND = b'\x1f'
+    RESPONSE_BYTES = 2
     def __init__(self, size=SetEnFontSize.THIRTYTWO):
         super().__init__(SetZhFontSize.COMMAND, size)
 
@@ -304,6 +311,7 @@ class DisplayText(Command):
     and English mixed display is supported.
     '''
     COMMAND = b'\x30'
+    RESPONSE_BYTES = 2
     def __init__(self, x, y, text):
         super().__init__(self.COMMAND,
                          struct.pack(">HH", x, y) + text + b'\x00')
@@ -330,6 +338,7 @@ class DisplayImage(DisplayText):
     are correct bitmap names, while PIC7890.BMP is a wrong bitmap namem.
     '''
     COMMAND = b'\x70'
+    RESPONSE_BYTES = 2
 
 
 ###############################################################################
@@ -343,6 +352,7 @@ class DrawCircle(Command):
     Draw a circle based on the given center coordination and radius.
     '''
     COMMAND = b'\x26'
+    RESPONSE_BYTES = 2
     def __init__(self, x, y, radius):
         super().__init__(self.COMMAND, struct.pack(">HHH", x, y, radius))
 
@@ -353,6 +363,7 @@ class FillCircle(DrawCircle):
     Fill a circle based on the given center coordination and radius.
     '''
     COMMAND = b'\x27'
+    RESPONSE_BYTES = 2
 
 
 class DrawTriangle(Command):
@@ -361,6 +372,7 @@ class DrawTriangle(Command):
     Draw a tri-angle according to three given point coordinates.
     '''
     COMMAND = b'\x28'
+    RESPONSE_BYTES = 2
     def __init__(self, x1, y1, x2, y2, x3, y3):
         super().__init__(self.COMMAND, struct.pack(">HHHHHH", x1, y1, x2, y2,
                                                    x3, y3))
@@ -372,6 +384,7 @@ class FillTriangle(DrawTriangle):
     Fill a tri-angle according to three given point coordinates.
     '''
     COMMAND = b'\x29'
+    RESPONSE_BYTES = 2
 
 
 class DrawRectangle(Command):
@@ -381,6 +394,7 @@ class DrawRectangle(Command):
     in which these two points serve as the diagonal points of the rectangle.
     '''
     COMMAND = b'\x25'
+    RESPONSE_BYTES = 2
     def __init__(self, x1, y1, x2, y2):
         super().__init__(self.COMMAND, struct.pack(">HHHH", x1, y1, x2, y2))
 
@@ -392,6 +406,7 @@ class FillRectangle(DrawRectangle):
     in which these two points serve as the diagonal points of the rectangle.
     '''
     COMMAND = b'\x24'
+    RESPONSE_BYTES = 2
 
 
 class ClearScreen(Command):
@@ -400,6 +415,7 @@ class ClearScreen(Command):
     Clear the screen with the background color.
     '''
     COMMAND = b'\x2e'
+    RESPONSE_BYTES = 2
 
 
 ###############################################################################
@@ -411,6 +427,8 @@ PORT_DEVICE = "/dev/ttyAMA0"
 PIN_RESET = 3
 PIN_WAKEUP = 7
 
+RESPONSE_READ_THRESHOLD = 600
+
 class EPaper(object):
     '''
     This is a class to make interacting with the 4.3inch e-Paper UART Module
@@ -419,8 +437,8 @@ class EPaper(object):
     See https://www.waveshare.com/wiki/4.3inch_e-Paper_UART_Module#Serial_port
     for more info.
     '''
-    def __init__(self, port=PORT_DEVICE, auto=False, reset=PIN_RESET,
-                 wakeup=PIN_WAKEUP, mode=GPIO.BOARD):
+    def __init__(self, port=PORT_DEVICE, reset=PIN_RESET, wakeup=PIN_WAKEUP,
+                 mode=GPIO.BOARD):
         '''
         Makes an EPaper object that will read and write from the specified
         serial device (file name).
@@ -429,7 +447,6 @@ class EPaper(object):
         caller should invoke GPIO.cleanup() before exiting.
 
         @param port The file name to open.
-        @param auto Automatically update after each call.
         @param reset The GPIO pin to use for resets.
         @param wakeup The GPIO pin to use for wakeups.
         @param mode The mode of GPIO pin addressing (GPIO.BOARD is the default).
@@ -445,7 +462,8 @@ class EPaper(object):
 
         self.reset_pin = reset
         self.wakeup_pin = wakeup
-        self.auto = auto
+
+        self.bytes_expected = 0
 
     def __enter__(self):
         '''
@@ -494,13 +512,28 @@ class EPaper(object):
         Send the provided command to the device, does not wait for a response
         or sleep or make any other considerations.
         '''
+        self.bytes_expected += command.RESPONSE_BYTES
         self.serial.write(command.encode())
-        if self.auto:
-            self.serial.write(RefreshAndUpdate().encode())
+        if self.bytes_expected >= RESPONSE_READ_THRESHOLD:
+            self.read_responses()
 
     def read(self, size=100, timeout=5):
         '''
         Read a response from the underlying serial device.
         '''
+        r_start = time.time()
         self.serial.timeout = timeout
-        return self.serial.read(size)
+        b = self.serial.read(size)
+        #print("read took %0.2f seconds. expected: %d got: %d data: %s" % (
+        #    time.time() - r_start, size, len(b), b.hex()))
+        return b
+
+    def read_responses(self, timeout=3):
+        if self.bytes_expected == 0:
+            print("no response expected")
+            return
+        r_start = time.time()
+        #print("reading expected response bytes: %d" % self.bytes_expected)
+        b = self.read(size=self.bytes_expected, timeout=timeout)
+        print("read: %d, read time: %0.2f" % (len(b), time.time() - r_start))
+        self.bytes_expected -= len(b)
