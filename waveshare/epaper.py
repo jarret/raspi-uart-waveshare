@@ -4,10 +4,11 @@
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
 
-import RPi.GPIO as GPIO
-import serial
-import struct
 import time
+import struct
+import serial
+
+import RPi.GPIO as GPIO
 
 ###############################################################################
 # base command class
@@ -456,7 +457,8 @@ class EPaper(object):
         self.serial.bytesize = serial.EIGHTBITS
         self.serial.parity = serial.PARITY_NONE
 
-        GPIO.setmode(mode)
+        if mode:
+            GPIO.setmode(mode)
         GPIO.setup(reset, GPIO.OUT)
         GPIO.setup(wakeup, GPIO.OUT)
 

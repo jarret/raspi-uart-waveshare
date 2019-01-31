@@ -3,6 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
+import time
+
+import RPi.GPIO as GPIO
+
 from waveshare.epaper import Handshake
 from waveshare.epaper import RefreshAndUpdate
 from waveshare.epaper import SetPallet
@@ -14,14 +18,14 @@ from waveshare.epaper import ClearScreen
 
 from qrdraw import QRDraw
 
-import time
 
 class InvoiceDisplay(object):
     """
     Class for drawing soda invoices on the e-paper screen
     """
-    def __init__(self, paper):
+    def __init__(self, paper, mode=GPIO.BOARD):
         self.paper = paper
+        self.mode = mode
         self._setup_display()
 
     def _handshake(self):

@@ -32,6 +32,7 @@ SELECTIONS = [
 
 
 if __name__ == '__main__':
+    GPIO.cleanup()
     with EPaper() as paper:
         display = InvoiceDisplay(paper)
         print("display is ready, starting in 2 seconds...")
