@@ -2,6 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php
 
+import sys
 import qrcode
 
 class QRDraw(object):
@@ -55,7 +56,7 @@ class QRDraw(object):
         for rects in rows.values():
             yield "".join(rect['str'] for rect in rects)
 
-    def iter_draw_params(self, x_offset=30, y_offset=30, scale=2):
+    def iter_draw_params(self, x_offset, y_offset, scale):
         for y, x_start, x_end, rect in self.iter_rects():
             x_start = x_start * scale
             x_end = (x_end * scale) - 1
@@ -69,19 +70,55 @@ class QRDraw(object):
             x2 = x_end + x_offset
             yield color, x1, y1, x2, y2
 
+    def place_at_scale(self, x1, y1, x2, y2, cx, cy, scale):
+        px1 = cx - ((self.width // 2) * scale)
+        px2 = cx + ((self.width // 2) * scale)
 
-    def get_draw(self, x1, y1, x2, y2):
+        py1 = cy - ((self.height // 2) * scale)
+        py2 = cy + ((self.height // 2) * scale)
+
+        #print("placed %d %d to %d %d" % (px1, py1, px2, py2))
+
+        cx = (px1 + py2) // 2
+        cy = (py1 + py2) // 2
+
+        #print("placed center point: %d %d" % (cx, cy))
+        if px1 < x1:
+            return None
+        if py1 < y1:
+            return None
+        if px2 > x2:
+            return None
+        if py2 > y2:
+            return None
+        return px1, py1, px2, py2
+
+    def place_inside_box(self, x_offset, y_offset, box_size):
+        x1 = x_offset
+        y1 = y_offset
+        x2 = x1 + box_size
+        y2 = y1 + box_size
+        #print("qr native width %d" % self.width)
+        #print("qr native height %d" % self.height)
         assert x2 > x1
         assert y2 > y1
         region_width = x2 - x1
         region_height = y2 - y1
-        print("region width" % region_width)
-        print("region height" % region_height)
+        #print("region width %d" % region_width)
+        #print("region height %d" % region_height)
+        assert region_width == region_height
 
         cx = (x1 + x2) // 2
         cy = (y1 + y2) // 2
 
+        #print("center point: %d %d" % (cx, cy))
 
-        
+        last_p = None
+        for scale in range(100):
+            p = self.place_at_scale(x1, y1, x2, y2, cx, cy, scale)
+            if not p:
+                return last_p[0], last_p[1], scale - 1
+            last_p = p
+            scale += 1
 
-
+        sys.exit("could not place code in box?)
