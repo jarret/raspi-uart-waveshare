@@ -12,7 +12,7 @@ class QRDraw(object):
     def __init__(self, content):
         qr = qrcode.QRCode(version=1,
                            error_correction=qrcode.constants.ERROR_CORRECT_M,
-                           box_size=1, border=0)
+                           box_size=1, border=2)
         qr.add_data(content)
         img = qr.make_image(fill_color="black", back_color="white")
         l = img.convert("L")
@@ -68,3 +68,20 @@ class QRDraw(object):
             x1 = x_start + x_offset
             x2 = x_end + x_offset
             yield color, x1, y1, x2, y2
+
+
+    def get_draw(self, x1, y1, x2, y2):
+        assert x2 > x1
+        assert y2 > y1
+        region_width = x2 - x1
+        region_height = y2 - y1
+        print("region width" % region_width)
+        print("region height" % region_height)
+
+        cx = (x1 + x2) // 2
+        cy = (y1 + y2) // 2
+
+
+        
+
+
