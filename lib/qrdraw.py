@@ -11,9 +11,14 @@ class QRDraw(object):
     displaying it on a pixel grid.
     """
     def __init__(self, content):
+        # A large border the QR code might be a good idea depending on what is
+        # surrounding the physical display. A 4 blocks is generally advisable
+        # for QR codes to ensure it can be easily picked up by a scanner.
+        border = 2
+
         qr = qrcode.QRCode(version=1,
                            error_correction=qrcode.constants.ERROR_CORRECT_M,
-                           box_size=1, border=2)
+                           box_size=1, border=border)
         qr.add_data(content)
         img = qr.make_image(fill_color="black", back_color="white")
         l = img.convert("L")
@@ -121,4 +126,4 @@ class QRDraw(object):
             last_p = p
             scale += 1
 
-        sys.exit("could not place code in box?)
+        sys.exit("could not place code in box?")
