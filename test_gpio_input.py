@@ -7,8 +7,8 @@ import RPi.GPIO as GPIO
 
 from waveshare.epaper import EPaper
 
-from invoicedisplay import InvoiceDisplay
-from selections import SELECTIONS
+from lib.invoicedisplay import InvoiceDisplay
+from lib.selections import SELECTIONS
 
 import time
 

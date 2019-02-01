@@ -7,14 +7,13 @@ import RPi.GPIO as GPIO
 
 from waveshare.epaper import EPaper
 
-from invoicedisplay import InvoiceDisplay
-from selections import SELECTIONS
+from lib.invoicedisplay import InvoiceDisplay
+from lib.selections import SELECTIONS
 
 import time
 
 
 if __name__ == '__main__':
-    GPIO.cleanup()
     with EPaper() as paper:
         display = InvoiceDisplay(paper)
         print("display is ready, starting in 2 seconds...")

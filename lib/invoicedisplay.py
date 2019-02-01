@@ -16,7 +16,7 @@ from waveshare.epaper import SetCurrentDisplayRotation
 from waveshare.epaper import SetEnFontSize
 from waveshare.epaper import ClearScreen
 
-from qrdraw import QRDraw
+from lib.qrdraw import QRDraw
 
 
 class InvoiceDisplay(object):
