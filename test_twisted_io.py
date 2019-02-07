@@ -7,6 +7,7 @@ import time
 
 import RPi.GPIO as GPIO
 from twisted.internet import reactor, threads
+from twisted.internet.task import LoopingCall
 
 from waveshare.epaper import EPaper
 
@@ -84,8 +85,10 @@ class ButtonEInkUI(object):
         self.bd = ButtonDrive(self.button_event)
         self.leds_on()
         paper = EPaper()
-        self.display = InvoiceDisplay(paper)
+        self.display = InvoiceDisplay(paper, refresh_cb=self.refresh_cb)
         self.drawing = False
+        self.blink = None
+        self.led_state = None
         self.leds_off()
 
     def button_thread(self):
@@ -97,17 +100,31 @@ class ButtonEInkUI(object):
                               bouncetime=150)
         GPIO.add_event_detect(BUTTON_4, GPIO.FALLING, callback=self.bd.button,
                               bouncetime=150)
+
+    def refresh_cb(self):
+        self.blink.stop()
+        self.leds_on()
+        print("ok, refreshing")
+
     def leds_on(self):
         GPIO.output(LED_1, GPIO.HIGH)
         GPIO.output(LED_2, GPIO.HIGH)
         GPIO.output(LED_3, GPIO.HIGH)
         GPIO.output(LED_4, GPIO.HIGH)
+        self.led_state = True
 
     def leds_off(self):
         GPIO.output(LED_1, GPIO.LOW)
         GPIO.output(LED_2, GPIO.LOW)
         GPIO.output(LED_3, GPIO.LOW)
         GPIO.output(LED_4, GPIO.LOW)
+        self.led_state = False
+
+    def leds_flip(self):
+        if self.led_state:
+            self.leds_off()
+        else:
+            self.leds_on()
 
     def button_event(self, button):
         if self.drawing:
@@ -121,6 +138,8 @@ class ButtonEInkUI(object):
         d = threads.deferToThread(self.display.draw_selection,
                                   SELECTION_MAPPING[button])
         d.addCallback(self.finish_drawing)
+        self.blink = LoopingCall(self.leds_flip)
+        self.blink.start(0.2, now=False)
 
     def finish_drawing(self, result):
         self.drawing = False

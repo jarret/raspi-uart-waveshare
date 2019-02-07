@@ -23,9 +23,10 @@ class InvoiceDisplay(object):
     """
     Class for drawing soda invoices on the e-paper screen
     """
-    def __init__(self, paper, mode=GPIO.BOARD):
+    def __init__(self, paper, mode=GPIO.BOARD, refresh_cb=None):
         self.paper = paper
         self.mode = mode
+        self.refresh_cb = refresh_cb
         self._setup_display()
 
     def _handshake(self):
@@ -104,6 +105,8 @@ class InvoiceDisplay(object):
         print("draw qr: %0.2f seconds" % (time.time() - start_time))
 
     def _refresh(self):
+        if self.refresh_cb:
+            self.refresh_cb()
         start_time = time.time()
         self.paper.send(RefreshAndUpdate())
         print("refresh update: %0.2f seconds" % (time.time() - start_time))
