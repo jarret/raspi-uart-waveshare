@@ -66,8 +66,19 @@ Examples
 
 [test_qr.py](test_qr.py) This doesn't draw anything on the e-ink screen, it just tests that the QR code dependency is working properly. It outputs a rendered QR Code as ascii and the coordinate draw instructions on the terminal.
 
-(pipe into `less` like so:  `./test_qr.py | less` to avoid scrolling by too fast)
+(you can pipe the standard of the script into `less` like so:  `./test_qr.py | less` to avoid scrolling by too fast)
 
 ![test_qr.py](img/test-qr-py.png)
 
 
+[test_cycle.py](test_cycle.py) This cycles through several LN Invoice QR Code draws on the e-ink display. It measures the time of the various phases and outputs that on the console for comparison.
+
+![test_cycle.py](img/test-cycle-py.png)
+
+
+[test_gpio_input.py](test_gpio_input.py) This has nothing to do with the e-ink, but just does some basic GPIO push button input. For making sure that works beforecombining htat with the Twisted and e-ink parts.
+
+[test_io.py](test_io.py) This also has nothing to do with the e-ink, but just does some basic GPIO push button input and LED output for making sure that works before combining that with the Twisted and e-ink parts.
+
+
+[test_twisted_io.py](test_twisted_io.py) This is an example of using the e-ink display and the GPIO input and output from a Twisted event loop. The example program displayes the QR code corresponding to a push-button input.
