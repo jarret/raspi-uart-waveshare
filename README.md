@@ -8,10 +8,21 @@ For more information about this display, see the [waveshare site](https://www.wa
 
 It requires the GPIO library that is typically available on the Raspberry PI. The example programs require some packages for the QR code rendering and Twisted event loops.
 
+The example programs are centered around displaying [Lightning Network](https://en.wikipedia.org/wiki/Lightning_Network) [BOLT11](https://github.com/lightningnetwork/lightning-rfc/blob/master/11-payment-encoding.md) invoices in QR Codes that can be picked up by a mobile wallet to perform a payment.
+
+
+In The Wild
+------
+
+This was developed for a Lightning Network Jukebox demo project. You can see a demo of this here: [![Lightning Network Jukebox at the Bitcoin Rodeo](https://img.youtube.com/vi/v=N4-rrps_d14/0.jpg)](https://www.youtube.com/watch?v=N4-rrps_d14)
+
+Also, the source code for that project is in [this repository](https://github.com/jarret/lightning-station).
+
 The Code
 ------
 
-There is a bunch of stuff in the repo, but the general-purpose module is in [waveshare/epaper.py]. This module provides the Python 3 API
+There is a bunch of stuff in the repo, but the featured general-purpose module is in [waveshare/epaper.py]. This module provides the Python 3 API for driving the display for an application.
+
 Wiring
 ------
 This diagram is for the Pi 3, and Pi 2. This will probably work on other Raspberry Pi iterations, but double-check that the pinout is the same to be sure. [This site](https://pinout.xyz/) has a clearer visual reference for finding the pins.
