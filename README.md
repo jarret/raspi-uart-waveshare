@@ -38,6 +38,7 @@ Configuring Pi Software
 -----------------
 The `libpython-dev` and `RPIO` libraries are needed.
 
+    sudo apt-get update
     sudo apt-get install libpython-dev python3-rpi.gpio
 
 The `pyserial` package is also needed via `pip3`
@@ -45,9 +46,10 @@ The `pyserial` package is also needed via `pip3`
     sudo apt-get install python3-pip
     pip3 install -U pyserial
 
-For the QR Code examples, `qrcode` will need to be installed.
+For the QR Code examples, `qrcode` and `pillow` will need to be installed to render the image to be displayed.
 
     sudo apt-get install libopenjp2-7 libtiff5
+    pip3 install -U pillow
     pip3 install -U qrcode
 
 For the Twisted event loop examples, `twisted` will need to be installed.
@@ -61,5 +63,11 @@ Examples
 [test_basic.py](test_basic.py) This draws some basic text and shapes on the screen in different greyscale colors. Intended as a basic smoke test for the libary and doesn't depend on the QR Code and twisted libraries.
 
 ![test_basic.py](img/test-basic-py.png)
+
+[test_qr.py](test_qr.py) This doesn't draw anything on the e-ink screen, it just tests that the QR code dependency is working properly. It outputs a rendered QR Code as ascii and the coordinate draw instructions on the terminal.
+
+(pipe into `less` like so:  `./test_qr.py | less` to avoid scrolling by too fast)
+
+![test_qr.py](img/test-qr-py.png)
 
 
