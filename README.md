@@ -1,7 +1,3 @@
-Note
-------
-STILL IN DEVELOPMENT - This is a side project I am tinkering with, so not promises for anything.
-
 Overview
 ------
 This library is an improvement and extension of [this repository](https://github.com/not-a-bird/waveshare-epaper-uart).  It is meant to work under Python3+ for the Raspberry Pi's GPIO output.
@@ -10,8 +6,12 @@ The API into this library is very similar to its predecessor and the provided ex
 
 For more information about this display, see the [waveshare site](https://www.waveshare.com/4.3inch-e-paper.htm).  There is also a product [wiki page](https://www.waveshare.com/wiki/4.3inch_e-Paper_UART_Module).
 
-It requires the GPIO library that is typically available on the Raspberry PI.
+It requires the GPIO library that is typically available on the Raspberry PI. The example programs require some packages for the QR code rendering and Twisted event loops.
 
+The Code
+------
+
+There is a bunch of stuff in the repo, but the general-purpose module is in [waveshare/epaper.py]. This module provides the Python 3 API
 Wiring
 ------
 This diagram is for the Pi 3, and Pi 2. This will probably work on other Raspberry Pi iterations, but double-check that the pinout is the same to be sure. [This site](https://pinout.xyz/) has a clearer visual reference for finding the pins.
@@ -25,30 +25,41 @@ This diagram is for the Pi 3, and Pi 2. This will probably work on other Raspber
 |GPIO04  7 | 2 WAKE_UP |
 |GPIO02  3 | 1 RESET   |
 
-Required Software
+Configuring Pi Hardware
+-------
+You will need to edit `/boot/cmdline.txt` and delete the parameter `console=serial0,115200` from the line.
+
+Also, you will need to enable the UART interface. Edit `/boot/config.txt` and add the line `enable_uart=1` and reboot.
+
+If you are running with a Raspberry Pi 3, the UART port conflicts with the bluetooth connection and you will need to disable bluetooth for this to work. Edit `/boot/config.txt` and add `dtoverlay=pi3-disable-bt` and reboot.
+
+
+Configuring Pi Software
 -----------------
 The `libpython-dev` and `RPIO` libraries are needed.
 
-    sudo apt-get install libpython-dev
-    pip3 install -U RPIO
+    sudo apt-get install libpython-dev python3-rpi.gpio
+
+The `pyserial` package is also needed via `pip3`
+
+    sudo apt-get install python3-pip
+    pip3 install -U pyserial
 
 For the QR Code examples, `qrcode` will need to be installed.
 
+    sudo apt-get install libopenjp2-7 libtiff5
     pip3 install -U qrcode
 
-This also might need some dependencies installed via `apt-get` on the Raspberry Pi to get the binary dependencies for the QR code.
+For the Twisted event loop examples, `twisted` will need to be installed.
 
-Using it
--------
-Assuming everything is wired up according to the above diagram, you may still
-need to disable the bluetooth serial connection (or use a different file path)
-and enable the uart.
+    pip3 install -U twisted
 
-To disable the bluetooth serial connection on the Raspberry Pi 3, edit `/boot/cmdline.txt` and delete
-`console=serial0,115200`.  Then edit `/boot/config.txt` and add
-`dtoverlay=pi3-disable-bt` and `eanble_urar=1` and reboot.
 
 Examples
 --------
 
-TBD
+[test_basic.py](test_basic.py) This draws some basic text and shapes on the screen in different greyscale colors. Intended as a basic smoke test for the libary and doesn't depend on the QR Code and twisted libraries.
+
+![test_basic.py](img/test-basic-py.png)
+
+
